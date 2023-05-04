@@ -1,6 +1,7 @@
 
 
 const sendEmail=require("../services/sendEmail")
+const bcrypt=require("bcryptjs")
 const Recruiter=require("../models/recruiter");
 const Candidate=require("../models/candidate");
 function isCompanyEmail(email) {
@@ -99,7 +100,54 @@ function generateOTP() {
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
     return randomNumber;
   }
+
+  const recruiterLogin=async(req,res)=>{
+    try {
+        
+        const recruiter=await Recruiter.findOne({email:req.body.email});
+       
+        if(recruiter){
+       
+            var isMatch=await bcrypt.compare(req.body.password,recruiter.password);
+            if(isMatch){
+               
+                if(recruiter.status!=="pending"){
+                await recruiter.generateAuthToken();
+                const t=recruiter;
+                delete t.password;
+                res.status(200).send({
+                    message:"User Login Successfully",
+                    data:t,
+                    error:""
+                })
+                }
+                else{
+                    res.status(401).send({
+                        message:"Email not Verified",
+                        error:"Email not Verified"
+                    })
+                }
+            }
+            else{
+                res.status(401).send({
+                    message:"Invalid Password",
+                    error:"Invalid Password"
+                })
+            }
+      
+        }
+        else{
+            res.status(404).send({
+                message:"User Not Found",
+                error:"User Not Found"
+            })
+        }
+    } catch (error) {
+        
+    }
+}
 module.exports={
     recruiterRegister,
-    recruiterVerify
+    recruiterVerify,
+    recruiterLogin
 }
