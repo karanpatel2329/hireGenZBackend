@@ -1,0 +1,14 @@
+
+
+
+
+
+
+const express=require("express");
+const candidateController=require("../../controllers/candidateController")
+const router=new express.Router();
+
+
+router.patch("/",candidateController.candidateVerify);
+
+module.exports=router;
