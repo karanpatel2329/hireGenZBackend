@@ -9,31 +9,17 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const candidateRegister=require("./routes/candidate/register");
-const candidateVerify=require("./routes/candidate/verify");
-const candidateLogin=require("./routes/candidate/login");
+const candidateRouter=require("./routes/candidate/candidateRoute");
 
-const recruiterLogin=require("./routes/recruiter/login");
-const recruiterRegister=require("./routes/recruiter/register");
-const recruiterVerify=require("./routes/recruiter/verify");
+const recruiterRouter=require("./routes/recruiter/recruiterRoute");
 
-const addJob = require("./routes/job/addJob");
-const getAllJob = require("./routes/job/getAllJobs");
-const getJobById = require("./routes/job/getJobById");
-const applyJob = require("./routes/job/applyJobById");
+const jobRouter=require("./routes/job/jobRouter");
 
-app.use("/candidateRegister",candidateRegister);
-app.use("/candidateVerify",candidateVerify)
-app.use("/candidateLogin",candidateLogin);
+app.use("/candidate",candidateRouter);
 
-app.use("/recruiterLogin",recruiterLogin);
-app.use("/recruiterRegister",recruiterRegister);
-app.use("/recruiterVerify",recruiterVerify);
+app.use("/recruiter",recruiterRouter)
 
-app.use("/addJob",addJob);
-app.use("/getAllJobs",getAllJob);
-app.use("/getJobById",getJobById);
-app.use("/applyJob",applyJob);
+app.use("/job",jobRouter);
 
 
 app.listen(port,()=>{

@@ -2,6 +2,7 @@
 
 const sendEmail=require("../services/sendEmail")
 const bcrypt=require("bcryptjs")
+const jwt=require("jsonwebtoken")
 const Recruiter=require("../models/recruiter");
 const Candidate=require("../models/candidate");
 function isCompanyEmail(email) {
@@ -70,7 +71,7 @@ const recruiterVerify=async(req,res)=>{
         if(recruiter){
             if(parseInt(recruiter.otp)===parseInt(req.body.otp)){
                 recruiter.status="verified";
-                recruiter.otp=""
+                await recruiter.updateOne({$unset: { otp: 1 }})
                 recruiter.save();
                 const token= await recruiter.generateAuthToken();
                 res.status(200).send({
@@ -146,8 +147,55 @@ function generateOTP() {
         
     }
 }
+
+const getRecruiterProfile=async(req,res)=>{
+    try {
+        if(!req.header("Authorization")){
+            res.status(401).send({
+                message:"Please Provide Token to get Detail",
+                error:"Please Provide Token to get Detail"
+            })
+        }
+        else{
+        const token=req.header('Authorization').replace('Bearer ','')
+        
+        if(!token){
+            res.status(401).send({
+                message:"Please Provide Token to get Detail",
+                error:"Please Provide Token to get Detail"
+            })
+        }
+        const decode=jwt.verify(token,process.env.JWTRECRUITER)
+               
+        const user =await Recruiter.findOne({_id:decode._id})
+        //console.log(user)
+        if(!user){
+            res.status(404).send({
+                message:"No User Found",
+                error:"No User Found"})
+        }
+        else{
+            const t=user.toObject();
+            delete t.password;
+            res.status(202).send({
+                data:t,
+                message:"Fetch User Successfully",
+                error:""
+            })
+        }}
+        
+    } catch (error) {
+        console.log(error)
+        res.status(401).send({
+            message:"Invalid Token",
+            error:error
+        })
+       
+    }
+}
 module.exports={
     recruiterRegister,
     recruiterVerify,
-    recruiterLogin
+    recruiterLogin,
+    getRecruiterProfile
 }

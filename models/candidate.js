@@ -5,10 +5,7 @@ mongoose.set('strictQuery', true);
 const Schema = mongoose.Schema;
 
 const CandidateSchema = new Schema({
-  firstName: {
-    type: String,
-  },
-  lastName: {
+  fullName: {
     type: String,
   },
   email: {
@@ -20,40 +17,52 @@ const CandidateSchema = new Schema({
     type: String,
     required: true,
   },
+  mobileNumber:{
+    type:Number
+  },
   profileImage: {
     type: String,
   },
-  DOB: {
-    type: Date,
+  city:{
+    type:String,
   },
+
   gender: {
     type: String,
-    enum: ["male", "female"],
+    enum: ["male", "female","others"],
     default: "male",
   },
-  experience: {
-    type: Number,
-  },
-  jobPreference: [
+
+  
+  qualification: [
     {
-      jobType: {
+      highestQualification: {
         type: String,
       },
-      functionalArea: {
-        type: String,
-      },
-      expectedSalary: {
-        type: String,
-      },
-    },
-  ],
-  education: [
-    {
       instituteName: {
         type: String,
       },
-      level: {
+      startYear:{
+        type:Date,
+      },
+      endYear:{
+        type:Date
+      },
+      stream:{
+        type:String
+      }
+    },
+  ],
+  jobs: [
+    {
+      profile: {
         type: String,
+      },
+      organization: {
+        type: String,
+      },
+      location:{
+        type:String
       },
       startDate: {
         type: Date,
@@ -61,8 +70,18 @@ const CandidateSchema = new Schema({
       endDate: {
         type: Date,
       },
+      description:{
+        type:String
+      }
     },
   ],
+  portfolioLink:{
+    type:String
+  },
+  skills:[{
+    type:String
+  }]
+  ,
   token:{
     type:String
   },
@@ -73,8 +92,11 @@ const CandidateSchema = new Schema({
   },
   otp:{
     type:Number,
+  },
+  detailFillProgress:{
+    type:Number,
+    default:0
   }
-    
   });
 
 CandidateSchema.methods.generateAuthToken=async function(){

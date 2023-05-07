@@ -5,6 +5,7 @@
 const Recruiter=require("../models/recruiter");
 const Candidate=require("../models/candidate");
 const sendEmail=require("../services/sendEmail")
+const jwt=require("jsonwebtoken");
 const bcrypt=require("bcryptjs")
 const candidateRegister=async(req,res)=>{
    
@@ -56,7 +57,7 @@ const candidateVerify=async(req,res)=>{
         if(candidate){
             if(parseInt(candidate.otp)===parseInt(req.body.otp)){
                 candidate.status="verified";
-                candidate.otp="";
+                await candidate.updateOne({$unset: { otp: 1 }})
                 candidate.save();
                 const token= await candidate.generateAuthToken();
                 res.status(200).send({
@@ -85,8 +86,7 @@ const candidateVerify=async(req,res)=>{
 function generateOTP() {
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
     return randomNumber;
-  }
-
+}
 const candidateLogin=async(req,res)=>{
     try {
         
@@ -133,8 +133,159 @@ const candidateLogin=async(req,res)=>{
         
     }
 }
+
+const getCandidateProfile=async(req,res)=>{
+    try {
+        if(!req.header("Authorization")){
+            res.status(401).send({
+                message:"Please Provide Token to get Detail",
+                error:"Please Provide Token to get Detail"
+            })
+        }
+        else{
+        const token=req.header('Authorization').replace('Bearer ','')
+        
+    
+        const decode=jwt.verify(token,process.env.JWTCANDIDATE);
+        const user =await Candidate.findOne({_id:decode._id})
+        //console.log(user)
+        if(!user){
+            res.status(404).send({
+                message:"No User Found",
+                error:"No User Found"})
+        }
+        else{
+            const t=user.toObject();
+            delete t.password;
+            console.log(t)
+            res.status(202).send({
+                data:t,
+                message:"Fetch User Successfully",
+                error:""
+            })
+        }
+    }
+    } catch (error) {
+        console.log(error)
+        res.status(401).send({
+            message:"Invalid Token",
+            error:error
+        })
+       
+    }
+}
+
+const addPersonalDetails=async(req,res)=>{
+    try {
+            
+            const data=req.body;
+            await Candidate.findByIdAndUpdate(req.user._id,{$set:{fullName:data.fullName,mobileNumber:data.mobileNumber,city:data.city,gender:data.gender,detailFillProgress:1}}).then((result)=>{
+                res.status(200).send({
+                    message:"Personal Info Added successfully",
+                    error:""
+                })
+            }).catch((err)=>{
+                res.status(501).send({
+                    message:"Internal Server Error",
+                    error:err
+                })
+            })
+        
+    
+        
+    } catch (error) {
+        res.status(401).send({
+            message:"Invalid Token",
+            error:error
+        })
+    }
+}
+
+const addQualificationDetail=async(req,res)=>{
+    try {
+            
+        const data=req.body;
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:data.qualification,detailFillProgress:2}}).then((result)=>{
+            res.status(200).send({
+                message:"Qualification Info Added successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+    
+
+    
+} catch (error) {
+    res.status(401).send({
+        message:"Invalid Token",
+        error:error
+    })
+}
+}
+
+const addJobsDetails=async(req,res)=>{
+    try {
+            
+        const data=req.body;
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{jobs:data.jobs,detailFillProgress:3}}).then((result)=>{
+            res.status(200).send({
+                message:"Jobs Info Added successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+    
+
+    
+} catch (error) {
+    res.status(401).send({
+        message:"Invalid Token",
+        error:error
+    })
+}
+}
+
+const addRequirementsDetails=async(req,res)=>{
+    try {
+            
+        const data=req.body;
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{portfolioLink:data.portfolioLink,skills:data.skills,detailFillProgress:4}}).then((result)=>{
+            res.status(200).send({
+                message:"Requirements Info Added successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+    
+
+    
+} catch (error) {
+    res.status(401).send({
+        message:"Invalid Token",
+        error:error
+    })
+}
+}
+
 module.exports={
     candidateRegister,
     candidateVerify,
-    candidateLogin
+    candidateLogin,
+    getCandidateProfile,
+    addPersonalDetails,
+    addQualificationDetail,
+    addJobsDetails,
+    addRequirementsDetails
 }
