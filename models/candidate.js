@@ -108,7 +108,7 @@ CandidateSchema.methods.generateAuthToken=async function(){
 }
 CandidateSchema.pre('save', async function(next){
   const user=this
-  
+  console.log(user.password)
   if(user.isModified('password')){
       user.password=await bcrypt.hash(user.password,8)
       console.log(user.password)

@@ -279,6 +279,127 @@ const addRequirementsDetails=async(req,res)=>{
 }
 }
 
+const sendCandidatePasswordResetOtp=async(req,res)=>{
+    try {
+        const finder={email:req.body.email}
+       
+        const candidate=await Candidate.findOne(finder);
+        if(!candidate){
+            res.status(401).send({message:"User Not Found",
+            error:"User Not Found"})
+        }
+        if(candidate.status=="pending"){
+            res.status(401).send({message:"Your Email is Not Verified",
+            error:"Email is Not Verified"})
+        }
+        const otp=generateOTP();
+        
+        candidate.updateOne({$set:{otp:otp}}).then(async(result)=>{
+            var message=`OTP to reset your password: ${otp}`;
+            await sendEmail(candidate.email, "Reset Account Password", message);
+            var t=candidate.toObject();
+            delete t.password;
+            delete t.otp;
+            res.status(200).send({
+                message:"Otp Sent Successfully",
+                data:t,
+                error:""
+            })
+        }).catch((err)=>{
+            
+            res.status(501).send({
+                message:"Something Went Wrong",
+                error:err
+            })
+        })
+       
+
+    } catch (error) {
+        res.status(501).send({
+            message:"Something Went Wrong1",
+            error:error
+        })
+    }
+}
+
+const passwordResetOtpVerify=async(req,res)=>{
+
+    try {
+        const candidate=await Candidate.findById(req.body.id);
+        if(!candidate){
+            res.status(404).send({
+                message:"User Not Found",
+                error:"User Not Found"
+            })
+        }
+        else{
+
+        if(!candidate.otp){
+            res.status(500).send({
+                message:'No Otp Found',
+                error:"No OTP Found"
+            })
+        }
+        else{
+        if(parseInt(candidate.otp)===parseInt(req.body.otp)){
+            await candidate.updateOne({$unset: { otp: 1 }})
+            candidate.save();
+            var t=candidate.toObject();
+            delete t.password;
+            delete t.otp;
+         
+            res.send({
+                message:"OTP Verified Successfully",
+                data:t,
+                error:""
+            })
+        }
+        else{
+            res.status(404).send({
+                message:"Invalid Otp",
+                error:"Invalid Otp"
+            })
+        }}}
+    } catch (error) {
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:error
+        })
+    }
+}
+const resetPassword=async(req,res)=>{
+    try {
+        const candidate=await Candidate.findById(req.body.id);
+        if(!candidate){
+            res.status(404).send({
+                message:"User Not Found",
+                error:"User Not Found"
+            })
+        }
+        var isMatch=await bcrypt.compare(req.body.newPassword,candidate.password);
+        if(isMatch){
+            res.status(403).send({
+                message:"New Password can't be same as New Password",
+                error:"New Password can't be same as New Password"
+            })
+        }
+        else{
+       candidate.password=req.body.newPassword;
+        candidate.save()
+        const t=candidate.toObject();
+        delete t.password
+        res.status(200).send({
+            message:"Password Reset Successfully",
+            error:"",
+            data:t
+        })}
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong",
+            error:error
+        })
+    }
+}
 module.exports={
     candidateRegister,
     candidateVerify,
@@ -287,5 +408,8 @@ module.exports={
     addPersonalDetails,
     addQualificationDetail,
     addJobsDetails,
-    addRequirementsDetails
+    addRequirementsDetails,
+    sendCandidatePasswordResetOtp,
+    passwordResetOtpVerify,
+    resetPassword
 }

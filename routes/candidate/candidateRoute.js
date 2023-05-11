@@ -15,4 +15,7 @@ router.patch("/addPersonalDetail",candidateMiddleware,candidateController.addPer
 router.patch("/addQualificationDetail",candidateMiddleware,candidateController.addQualificationDetail);
 router.patch("/addJobsDetail",candidateMiddleware,candidateController.addJobsDetails);
 router.patch("/addRequirementsDetail",candidateMiddleware,candidateController.addRequirementsDetails);
+router.patch("/sendPasswordResetOtp",candidateController.sendCandidatePasswordResetOtp);
+router.patch("/passwordResetOtpVerify",candidateController.passwordResetOtpVerify);
+router.patch("/resetPassword",candidateController.resetPassword);
 module.exports=router;
