@@ -74,8 +74,11 @@ const recruiterVerify=async(req,res)=>{
                 await recruiter.updateOne({$unset: { otp: 1 }})
                 recruiter.save();
                 const token= await recruiter.generateAuthToken();
+                const t =recruiter.toObject();
+                delete t.password;
+                delete t.otp;
                 res.status(200).send({
-                    data:recruiter,
+                    data:t,
                     message:"User Verified",
                     error:""
                 })
@@ -193,9 +196,137 @@ const getRecruiterProfile=async(req,res)=>{
        
     }
 }
+
+const sendRecruiterPasswordResetOtp=async(req,res)=>{
+    try {
+        const finder={email:req.body.email}
+       
+        const recruiter=await Recruiter.findOne(finder);
+        if(!recruiter){
+            res.status(401).send({message:"User Not Found",
+            error:"User Not Found"})
+        }
+        else{
+        if(recruiter.status=="pending"){
+            res.status(401).send({message:"Your Email is Not Verified",
+            error:"Email is Not Verified"})
+        }
+        else{
+        const otp=generateOTP();
+        
+        recruiter.updateOne({$set:{otp:otp}}).then(async(result)=>{
+            var message=`OTP to reset your password: ${otp}`;
+            await sendEmail(recruiter.email, "Reset Account Password", message);
+            var t=recruiter.toObject();
+            delete t.password;
+            delete t.otp;
+            res.status(200).send({
+                message:"Otp Sent Successfully",
+                data:t,
+                error:""
+            })
+        }).catch((err)=>{
+            
+            res.status(501).send({
+                message:"Something Went Wrong",
+                error:err
+            })
+        })
+    }
+        }
+    } catch (error) {
+        res.status(501).send({
+            message:"Something Went Wrong1",
+            error:error
+        })
+    }
+}
+
+const passwordResetOtpVerify=async(req,res)=>{
+
+    try {
+        const recruiter=await Recruiter.findById(req.body.id);
+        if(!recruiter){
+            res.status(404).send({
+                message:"User Not Found",
+                error:"User Not Found"
+            })
+        }
+        else{
+
+        if(!recruiter.otp){
+            res.status(500).send({
+                message:'No Otp Found',
+                error:"No OTP Found"
+            })
+        }
+        else{
+        if(parseInt(recruiter.otp)===parseInt(req.body.otp)){
+            await recruiter.updateOne({$unset: { otp: 1 }})
+            recruiter.save();
+            var t=recruiter.toObject();
+            delete t.password;
+            delete t.otp;
+         
+            res.send({
+                message:"OTP Verified Successfully",
+                data:t,
+                error:""
+            })
+        }
+        else{
+            res.status(404).send({
+                message:"Invalid Otp",
+                error:"Invalid Otp"
+            })
+        }}}
+    } catch (error) {
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:error
+        })
+    }
+}
+const resetPassword=async(req,res)=>{
+    try {
+        const recruiter=await Recruiter.findById(req.body.id);
+        if(!recruiter){
+            res.status(404).send({
+                message:"User Not Found",
+                error:"User Not Found"
+            })
+        }
+        else{
+        var isMatch=await bcrypt.compare(req.body.newPassword,recruiter.password);
+        if(isMatch){
+            res.status(403).send({
+                message:"New Password can't be same as New Password",
+                error:"New Password can't be same as New Password"
+            })
+        }
+        else{
+            recruiter.password=req.body.newPassword;
+            recruiter.save()
+        const t=recruiter.toObject();
+        delete t.password
+        res.status(200).send({
+            message:"Password Reset Successfully",
+            error:"",
+            data:t
+        })}}
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong",
+            error:error
+        })
+    }
+}
 module.exports={
     recruiterRegister,
     recruiterVerify,
     recruiterLogin,
-    getRecruiterProfile
+    getRecruiterProfile,
+    passwordResetOtpVerify,
+    sendRecruiterPasswordResetOtp,
+    resetPassword
 }

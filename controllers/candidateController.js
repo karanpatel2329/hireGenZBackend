@@ -288,10 +288,12 @@ const sendCandidatePasswordResetOtp=async(req,res)=>{
             res.status(401).send({message:"User Not Found",
             error:"User Not Found"})
         }
+        else{
         if(candidate.status=="pending"){
             res.status(401).send({message:"Your Email is Not Verified",
             error:"Email is Not Verified"})
         }
+        else{
         const otp=generateOTP();
         
         candidate.updateOne({$set:{otp:otp}}).then(async(result)=>{
@@ -312,6 +314,7 @@ const sendCandidatePasswordResetOtp=async(req,res)=>{
                 error:err
             })
         })
+    }}
        
 
     } catch (error) {
@@ -376,6 +379,7 @@ const resetPassword=async(req,res)=>{
                 error:"User Not Found"
             })
         }
+        else{
         var isMatch=await bcrypt.compare(req.body.newPassword,candidate.password);
         if(isMatch){
             res.status(403).send({
@@ -392,7 +396,7 @@ const resetPassword=async(req,res)=>{
             message:"Password Reset Successfully",
             error:"",
             data:t
-        })}
+        })}}
     } catch (error) {
         res.status(500).send({
             message:"Something Went Wrong",

@@ -14,10 +14,10 @@ const auth =async(req,res,next)=>{
         }
         else{
         const token=req.header('Authorization').replace('Bearer ','')
-        console.log(token)
+        // console.log(token)
     
         const decode=jwt.verify(token,process.env.JWTCANDIDATE)
-        console.log(decode)
+        // console.log(decode)
         const user =await Candidate.findOne({_id:decode._id})
       
         if(!user){
