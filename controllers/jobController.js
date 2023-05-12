@@ -1,4 +1,5 @@
 const Job = require('../models/job');
+const Candidate = require('../models/candidate');
 
 const addJob = async(req,res)=>{
     try{
@@ -64,9 +65,36 @@ const applyJobById = async(req,res)=>{
     }
 }
 
+const getJobByCategory=async(req,res)=>{
+    try {
+        const category=req.body.category;
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
+    
+        // Calculate the skip value for pagination
+        const skip = pageNumber * pageSize;
+    
+        // Perform the search query and get the total count
+        const jobs = await Job.find({ jobType: category })
+          .skip(skip)
+          .limit(pageSize);
+
+        res.status(200).send({
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            data:jobs,
+            error:""
+        })
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong",
+            error:error
+        })
+    }
+}
 module.exports ={
     addJob,
     getAllJob,
     getJobById,
-    applyJobById
+    applyJobById,
+    getJobByCategory
 };

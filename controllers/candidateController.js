@@ -4,6 +4,7 @@
 
 const Recruiter=require("../models/recruiter");
 const Candidate=require("../models/candidate");
+
 const sendEmail=require("../services/sendEmail")
 const jwt=require("jsonwebtoken");
 const bcrypt=require("bcryptjs")
@@ -404,6 +405,8 @@ const resetPassword=async(req,res)=>{
         })
     }
 }
+
+
 module.exports={
     candidateRegister,
     candidateVerify,
