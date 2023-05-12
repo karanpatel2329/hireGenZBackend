@@ -26,9 +26,10 @@ const JobSchema = new Schema({
     type: String,
     required: true,
   },
-  jobSkill: {
-    type: String,
-  },
+  jobSkill:[{
+    type:String
+  }]
+  ,
   jobType: {
     type: String,
   },
