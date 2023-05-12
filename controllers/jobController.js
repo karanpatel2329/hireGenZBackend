@@ -1,6 +1,5 @@
 const Candidate = require('../models/candidate');
 const Job = require('../models/job');
-const Candidate = require('../models/candidate');
 
 const addJob = async(req,res)=>{
     try{
@@ -17,28 +16,48 @@ const addJob = async(req,res)=>{
 
 const getAllJob = async(req,res)=>{
     try{
-        const user =await Candidate.findById(req.query.id);
-        console.log(user.skills);
-        const preferredJobSkills = user.skills;
-        const preferredFunctionalAreas = user.qualification.map(q => q.stream);
+        // console.log(req.user)
+       
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
     
+        // Calculate the skip value for pagination
+        const skip = pageNumber * pageSize;
+        const preferredJobSkills = req.user.skills;
+        const preferredFunctionalAreas = req.user.qualification.map(q => q.stream);
+        
+        const regexpreferredJobSkills = new RegExp(preferredJobSkills, 'i');
+        const regexpreferredFunctionalAreas = new RegExp(preferredFunctionalAreas, 'i');
+
         const matchingJobs = await Job.find({
           $or: [
-            { jobSkill: { $in: preferredJobSkills } },
-            { functionalArea: { $in: preferredFunctionalAreas } },
+            { jobSkill: { $in: regexpreferredJobSkills } },
+            { functionalArea: { $in: regexpreferredFunctionalAreas } },
           ]
-        });
-        console.log(matchingJobs);
+        }).skip(skip)
+        .limit(pageSize);;
+        // console.log(matchingJobs);
+        
+          const totalCount = await Job.countDocuments({   $or: [
+            { jobSkill: { $in: regexpreferredJobSkills } },
+            { functionalArea: { $in: regexpreferredFunctionalAreas } },
+          ] });
+
         // const job =await Job.find({
         //     jobSkill: { $in: user.skills },
         //   });
         // console.log(job);
         res.status(200).send({
-            data:matchingJobs,
-            message:"job found successfully"
+            data:{matchingJobs,totalCount},
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            error:""
         });      
     }catch(e){
         console.log(e);
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:e
+        });
     }
 }
 const getJobById = async(req,res)=>{
@@ -85,18 +104,20 @@ const getJobByCategory=async(req,res)=>{
         const category=req.body.category;
         const pageNumber = parseInt(req.body.page) || 0;
         const pageSize = parseInt(req.body.limit) || 10;
-    
+        const regex=new RegExp(req.body.category,"i")
         // Calculate the skip value for pagination
         const skip = pageNumber * pageSize;
     
         // Perform the search query and get the total count
-        const jobs = await Job.find({ jobType: category })
+        const jobs = await Job.find({ jobType: regex })
           .skip(skip)
           .limit(pageSize);
+         
+        const totalCount=await Job.countDocuments({ jobType: regex });   
 
         res.status(200).send({
             message:"Page "+pageNumber+" number jobs get Successfully",
-            data:jobs,
+            data:{jobs,totalCount},
             error:""
         })
     } catch (error) {
@@ -106,10 +127,56 @@ const getJobByCategory=async(req,res)=>{
         })
     }
 }
+
+const searchJob=async(req,res)=>{
+    try{
+        // console.log(req.user)
+       
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
+    
+        // Calculate the skip value for pagination
+        const skip = pageNumber * pageSize;
+
+        const searchText=req.body.searchText
+        const regex = new RegExp(searchText, 'i');
+        // console.log(regex)
+        const matchingJobs = await Job.find({
+          $or: [
+            { title: { $in: regex } },
+            { companyName: { $in: regex } },
+          ]
+        }).skip(skip)
+        .limit(pageSize);;
+        // console.log(matchingJobs);
+        
+          const totalCount = await Job.countDocuments({   $or: [
+            { title: { $in: regex } },
+            { companyName: { $in: regex } },
+          ] });
+
+        // const job =await Job.find({
+        //     jobSkill: { $in: user.skills },
+        //   });
+        // console.log(job);
+        res.status(200).send({
+            data:{matchingJobs,totalCount},
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            error:""
+        });      
+    }catch(e){
+        console.log(e);
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:e
+        });
+    }
+}
 module.exports ={
     addJob,
     getAllJob,
     getJobById,
     applyJobById,
-    getJobByCategory
+    getJobByCategory,
+    searchJob
 };

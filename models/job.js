@@ -16,6 +16,10 @@ const JobSchema = new Schema({
   degree: {
     type: String,
   },
+  title:{
+    type:String
+  }
+  ,
   desc: {
     type: String,
   },

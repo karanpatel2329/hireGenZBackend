@@ -406,6 +406,189 @@ const resetPassword=async(req,res)=>{
     }
 }
 
+const addEducation=async(req,res)=>{
+    try {
+            
+        const data=req.body;
+        const new_education=[...req.user.qualification,req.body.education]
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:new_education}}).then((result)=>{
+            res.status(200).send({
+                message:"Qualification Info Updated successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            console.log(err)
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+
+} catch (error) {
+    res.status(401).send({
+        message:"Invalid Token",
+        error:error
+    })
+}
+}
+
+const deleteEducation = async (req, res) => {
+    try {
+        const qualificationId = req.body.qualificationId;
+        const newEducation = req.user.qualification.filter(qualification => qualification._id.toString() !== qualificationId);
+
+        await Candidate.findByIdAndUpdate(req.user._id, { $set: { qualification: newEducation } })
+            .then((result) => {
+                res.status(200).send({
+                    message: "Qualification Info deleted successfully",
+                    error: ""
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.status(501).send({
+                    message: "Internal Server Error",
+                    error: err
+                });
+            });
+    } catch (error) {
+        res.status(401).send({
+            message: "Invalid Token",
+            error: error
+        });
+    }
+}
+
+const editEducation = async (req, res) => {
+    try {
+        const { qualificationId, updatedData } = req.body;
+
+        const updateQuery = {};
+        for (const key in updatedData) {
+            updateQuery[`qualification.$[qualification].${key}`] = updatedData[key];
+        }
+
+        await Candidate.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: updateQuery
+            },
+            {
+                arrayFilters: [{ "qualification._id": { $eq: qualificationId } }]
+            }
+        )
+            .then((result) => {
+                res.status(200).send({
+                    message: "Qualification Info updated successfully",
+                    error: ""
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.status(501).send({
+                    message: "Internal Server Error",
+                    error: err
+                });
+            });
+    } catch (error) {
+        res.status(401).send({
+            message: "Invalid Token",
+            error: error
+        });
+    }
+}
+const addJob=async(req,res)=>{
+    try {
+            
+        const data=req.body;
+        const new_job=[...req.user.jobs,req.body.job]
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{jobs:new_job}}).then((result)=>{
+            res.status(200).send({
+                message:"Job Info Updated successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            console.log(err)
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+
+} catch (error) {
+    res.status(401).send({
+        message:"Invalid Token",
+        error:error
+    })
+}
+}
+
+const deleteJob = async (req, res) => {
+    try {
+        const jobId = req.body.jobId;
+        const new_job = req.user.jobs.filter(job => job._id.toString() !== jobId);
+
+        await Candidate.findByIdAndUpdate(req.user._id, { $set: { jobs: new_job } })
+            .then((result) => {
+                res.status(200).send({
+                    message: "Job Info deleted successfully",
+                    error: ""
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.status(501).send({
+                    message: "Internal Server Error",
+                    error: err
+                });
+            });
+    } catch (error) {
+        res.status(401).send({
+            message: "Invalid Token",
+            error: error
+        });
+    }
+}
+
+const editJob = async (req, res) => {
+    try {
+        const { jobId, updatedData } = req.body;
+
+        const updateQuery = {};
+        for (const key in updatedData) {
+            updateQuery[`jobs.$[jobs].${key}`] = updatedData[key];
+        }
+        
+        await Candidate.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: updateQuery
+            },
+            {
+                arrayFilters: [{ "jobs._id": { $eq: jobId } }]
+            }
+        )
+            .then((result) => {
+                res.status(200).send({
+                    message: "Jobs Info updated successfully",
+                    error: ""
+                });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.status(501).send({
+                    message: "Internal Server Error",
+                    error: err
+                });
+            });
+    } catch (error) {
+        res.status(401).send({
+            message: "Invalid Token",
+            error: error
+        });
+    }
+}
+
 
 module.exports={
     candidateRegister,
@@ -418,5 +601,10 @@ module.exports={
     addRequirementsDetails,
     sendCandidatePasswordResetOtp,
     passwordResetOtpVerify,
-    resetPassword
+    resetPassword,
+    addEducation,
+    deleteEducation,editEducation,
+    addJob,
+    deleteJob,
+    editJob
 }
