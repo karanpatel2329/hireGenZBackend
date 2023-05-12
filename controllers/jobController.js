@@ -1,3 +1,4 @@
+const Candidate = require('../models/candidate');
 const Job = require('../models/job');
 
 const addJob = async(req,res)=>{
@@ -15,10 +16,24 @@ const addJob = async(req,res)=>{
 
 const getAllJob = async(req,res)=>{
     try{
-        const job =await Job.find({});
-        console.log(job);
+        const user =await Candidate.findById(req.query.id);
+        console.log(user.skills);
+        const preferredJobSkills = user.skills;
+        const preferredFunctionalAreas = user.qualification.map(q => q.stream);
+    
+        const matchingJobs = await Job.find({
+          $or: [
+            { jobSkill: { $in: preferredJobSkills } },
+            { functionalArea: { $in: preferredFunctionalAreas } },
+          ]
+        });
+        console.log(matchingJobs);
+        // const job =await Job.find({
+        //     jobSkill: { $in: user.skills },
+        //   });
+        // console.log(job);
         res.status(200).send({
-            data:job,
+            data:matchingJobs,
             message:"job found successfully"
         });      
     }catch(e){
