@@ -228,13 +228,13 @@ const addQualificationDetail=async(req,res)=>{
 }
 }
 
-const addJobsDetails=async(req,res)=>{
+const addExperiencesDetails=async(req,res)=>{
     try {
             
         const data=req.body;
-        await Candidate.findByIdAndUpdate(req.user._id,{$set:{jobs:data.jobs,detailFillProgress:3}}).then((result)=>{
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{experiences:data.experiences,detailFillProgress:3}}).then((result)=>{
             res.status(200).send({
-                message:"Jobs Info Added successfully",
+                message:"Experience Info Added successfully",
                 error:""
             })
         }).catch((err)=>{
@@ -497,14 +497,13 @@ const editEducation = async (req, res) => {
         });
     }
 }
-const addJob=async(req,res)=>{
+const addExperience=async(req,res)=>{
     try {
-            
-        const data=req.body;
-        const new_job=[...req.user.jobs,req.body.job]
-        await Candidate.findByIdAndUpdate(req.user._id,{$set:{jobs:new_job}}).then((result)=>{
+       
+        const new_experience=[...req.user.experiences,req.body.experience]
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{experiences:new_experience}}).then((result)=>{
             res.status(200).send({
-                message:"Job Info Updated successfully",
+                message:"Experience Info Updated successfully",
                 error:""
             })
         }).catch((err)=>{
@@ -523,15 +522,15 @@ const addJob=async(req,res)=>{
 }
 }
 
-const deleteJob = async (req, res) => {
+const deleteExperience = async (req, res) => {
     try {
-        const jobId = req.body.jobId;
-        const new_job = req.user.jobs.filter(job => job._id.toString() !== jobId);
+        const experienceId = req.body.experienceId;
+        const new_experience = req.user.experiences.filter(experience => experience._id.toString() !== experienceId);
 
-        await Candidate.findByIdAndUpdate(req.user._id, { $set: { jobs: new_job } })
+        await Candidate.findByIdAndUpdate(req.user._id, { $set: { experiences: new_experience} })
             .then((result) => {
                 res.status(200).send({
-                    message: "Job Info deleted successfully",
+                    message: "Experience Info deleted successfully",
                     error: ""
                 });
             })
@@ -550,13 +549,13 @@ const deleteJob = async (req, res) => {
     }
 }
 
-const editJob = async (req, res) => {
+const editExperience = async (req, res) => {
     try {
-        const { jobId, updatedData } = req.body;
+        const { experienceId, updatedData } = req.body;
 
         const updateQuery = {};
         for (const key in updatedData) {
-            updateQuery[`jobs.$[jobs].${key}`] = updatedData[key];
+            updateQuery[`experiences.$[experiences].${key}`] = updatedData[key];
         }
         
         await Candidate.findByIdAndUpdate(
@@ -565,12 +564,12 @@ const editJob = async (req, res) => {
                 $set: updateQuery
             },
             {
-                arrayFilters: [{ "jobs._id": { $eq: jobId } }]
+                arrayFilters: [{ "experiences._id": { $eq: experienceId } }]
             }
         )
             .then((result) => {
                 res.status(200).send({
-                    message: "Jobs Info updated successfully",
+                    message: "Experiences Info updated successfully",
                     error: ""
                 });
             })
@@ -589,7 +588,111 @@ const editJob = async (req, res) => {
     }
 }
 
+const editPersonalDetail=async(req,res)=>{
+    try {
+        var fullName=req.body.fullName?req.body.fullName:req.user.fullName;
+        var mobileNumber=req.body.mobileNumber?req.body.mobileNumber:req.user.mobileNumber;
+        var city =req.body.city?req.body.city:req.user.city;
+        var gender=req.body.gender?req.body.gender:req.user.gender;
+        await Candidate.findByIdAndUpdate( req.user._id,{fullName:fullName,mobileNumber:mobileNumber,city:city,gender:gender}).then((result)=>{
+            res.status(200).send({
+                message:"User Personal Detail Updated Successfully!",
+                data:result,
+                error:""
+            })
+        }).catch((err)=>{
+            res.status(501).send({
+            message:"Something Went Wrong!",
+            error:err
+        })
 
+        })
+        
+    } catch (error) {
+          res.status(500).send({
+            message:"Something Went Wrong!",
+            error:error
+        })
+
+    }
+}
+
+const addPreference=async(req,res)=>{
+    try {
+        
+        const preference=req.body.preference;
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{preference:preference}}).then((result)=>{
+            res.status(200).send({
+                message:"Preference Info Updated successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            console.log(err)
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+
+    
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong!",
+            error:error
+        })
+    }
+}
+
+const saveJob=async(req,res)=>{
+    try {
+        const savedJobs= [...req.user.savedJob,req.body.jobId];
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{savedJob:savedJobs}}).then((result)=>{
+            res.status(200).send({
+                message:"Job Saved successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            console.log(err)
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+
+
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong!",
+            error:error
+        })
+    }
+}
+const unSaveJob=async(req,res)=>{
+    try {
+        const savedJobs = req.user.savedJob.filter(savejob => savejob.toString() !== req.body.jobId);
+
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{savedJob:savedJobs}}).then((result)=>{
+            res.status(200).send({
+                message:"Job UnSaved successfully",
+                error:""
+            })
+        }).catch((err)=>{
+            console.log(err)
+            res.status(501).send({
+                message:"Internal Server Error",
+                error:err
+            })
+        })
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message:"Something Went Wrong!",
+            error:error
+        })
+    }
+}
 module.exports={
     candidateRegister,
     candidateVerify,
@@ -597,14 +700,19 @@ module.exports={
     getCandidateProfile,
     addPersonalDetails,
     addQualificationDetail,
-    addJobsDetails,
+    addExperiencesDetails,
     addRequirementsDetails,
     sendCandidatePasswordResetOtp,
     passwordResetOtpVerify,
     resetPassword,
     addEducation,
-    deleteEducation,editEducation,
-    addJob,
-    deleteJob,
-    editJob
+    deleteEducation,
+    editEducation,
+    addExperience,
+    deleteExperience,
+    editExperience,
+    editPersonalDetail,
+    addPreference,
+    saveJob,
+    unSaveJob
 }

@@ -53,7 +53,7 @@ const CandidateSchema = new Schema({
       }
     },
   ],
-  jobs: [
+  experiences: [
     {
       profile: {
         type: String,
@@ -96,7 +96,31 @@ const CandidateSchema = new Schema({
   detailFillProgress:{
     type:Number,
     default:0
+  },
+  preference:{
+    areaOfInterest:[{
+        type:String
+    }],
+    workMode:[
+        {
+            type:String
+        }
+    ],
+    jobType:[
+        {
+            type:String
+        }
+    ]
+},
+savedJob:[
+  {
+    
+      type:String,
+    
   }
+]
+
+
   });
 
 CandidateSchema.methods.generateAuthToken=async function(){
