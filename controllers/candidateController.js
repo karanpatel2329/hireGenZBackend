@@ -137,35 +137,11 @@ const candidateLogin=async(req,res)=>{
 
 const getCandidateProfile=async(req,res)=>{
     try {
-        if(!req.header("Authorization")){
-            res.status(401).send({
-                message:"Please Provide Token to get Detail",
-                error:"Please Provide Token to get Detail"
-            })
-        }
-        else{
-        const token=req.header('Authorization').replace('Bearer ','')
-        
-    
-        const decode=jwt.verify(token,process.env.JWTCANDIDATE);
-        const user =await Candidate.findOne({_id:decode._id})
-        //console.log(user)
-        if(!user){
-            res.status(404).send({
-                message:"No User Found",
-                error:"No User Found"})
-        }
-        else{
-            const t=user.toObject();
-            delete t.password;
-            console.log(t)
-            res.status(202).send({
-                data:t,
-                message:"Fetch User Successfully",
-                error:""
-            })
-        }
-    }
+        res.status(200).send({
+            message:"Profile Fetch Successfully",
+            data:req.user,
+            error:""
+        })
     } catch (error) {
         console.log(error)
         res.status(401).send({

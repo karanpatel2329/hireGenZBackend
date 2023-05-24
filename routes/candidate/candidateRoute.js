@@ -8,10 +8,10 @@ const candidateController=require("../../controllers/candidateController");
 const notificationController=require("../../controllers/notificationController");
 const router=new  express.Router();
 
-router.get("/candidateLogin",candidateController.candidateLogin);
+router.post("/candidateLogin",candidateController.candidateLogin);
 router.post("/candidateRegister",candidateController.candidateRegister);
 router.patch("/candidateVerify",candidateController.candidateVerify);
-router.get("/getCandidateProfile",candidateController.getCandidateProfile);
+router.get("/getCandidateProfile",candidateMiddleware,candidateController.getCandidateProfile);
 router.patch("/addPersonalDetail",candidateMiddleware,candidateController.addPersonalDetails);
 router.patch("/addQualificationDetail",candidateMiddleware,candidateController.addQualificationDetail);
 router.patch("/addEducation",candidateMiddleware,candidateController.addEducation);
