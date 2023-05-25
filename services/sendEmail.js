@@ -8,7 +8,7 @@ const OAuth2=google.auth.OAuth2;
 
 const OAuth2_client=new OAuth2(config.clientId,config.clientSecret);
 OAuth2_client.setCredentials({refresh_token:config.refreshToken});
-console.log(config);
+
 const sendEmail = async (email, subject, text) => {
   try {
     const accessToken=OAuth2_client.getAccessToken();
