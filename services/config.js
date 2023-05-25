@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const config={
-    user:process.env.USER,
+    user:process.env.EMAILUSER,
     clientId:process.env.clientId,
     clientSecret:process.env.clientSecret,
     refreshToken:process.env.refreshToken
