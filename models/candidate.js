@@ -70,6 +70,11 @@ const CandidateSchema = new Schema({
       endDate: {
         type: Date,
       },
+      isCurrentlyWorking:{
+        type:Boolean,
+        default:false
+      }
+      ,
       description:{
         type:String
       }

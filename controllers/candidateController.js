@@ -182,17 +182,26 @@ const addQualificationDetail=async(req,res)=>{
     try {
             
         const data=req.body;
-        await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:data.qualification,detailFillProgress:2}}).then((result)=>{
-            res.status(200).send({
-                message:"Qualification Info Added successfully",
-                error:""
+        if(data.qualification!==undefined){
+
+            await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:data.qualification,detailFillProgress:2}}).then((result)=>{
+                res.status(200).send({
+                    message:"Qualification Info Added successfully",
+                    error:""
+                })
+            }).catch((err)=>{
+                res.status(501).send({
+                    message:"Internal Server Error",
+                    error:err
+                })
             })
-        }).catch((err)=>{
+        }
+        else{
             res.status(501).send({
-                message:"Internal Server Error",
-                error:err
+                message:"Something Went Wrong",
+                error:"No Qualification Detail Found"
             })
-        })
+        }
     
 
     
@@ -208,7 +217,10 @@ const addExperiencesDetails=async(req,res)=>{
     try {
             
         const data=req.body;
-        await Candidate.findByIdAndUpdate(req.user._id,{$set:{experiences:data.experiences,detailFillProgress:3}}).then((result)=>{
+        console.log(data.experience);
+        if(data.experience!=undefined){
+
+        await Candidate.findByIdAndUpdate(req.user._id,{$set:{experiences:data.experience,detailFillProgress:3}}).then((result)=>{
             res.status(200).send({
                 message:"Experience Info Added successfully",
                 error:""
@@ -219,7 +231,13 @@ const addExperiencesDetails=async(req,res)=>{
                 error:err
             })
         })
-    
+        }
+        else{
+            res.status(501).send({
+                message:"Something Went Wrong",
+                error:"No Experience Detail Found"
+            })
+        }
 
     
 } catch (error) {
@@ -234,6 +252,9 @@ const addRequirementsDetails=async(req,res)=>{
     try {
             
         const data=req.body;
+        
+        if(data.portfolioLink!==undefined||data.skills!==undefined){
+
         await Candidate.findByIdAndUpdate(req.user._id,{$set:{portfolioLink:data.portfolioLink,skills:data.skills,detailFillProgress:4}}).then((result)=>{
             res.status(200).send({
                 message:"Requirements Info Added successfully",
@@ -246,7 +267,13 @@ const addRequirementsDetails=async(req,res)=>{
             })
         })
     
-
+    }
+    else{
+        res.status(501).send({
+            message:"Something Went Wrong",
+            error:"Some Detail Found"
+        })
+    }
     
 } catch (error) {
     res.status(401).send({
