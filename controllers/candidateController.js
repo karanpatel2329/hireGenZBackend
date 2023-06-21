@@ -183,8 +183,16 @@ const addQualificationDetail=async(req,res)=>{
             
         const data=req.body;
         if(data.qualification!==undefined){
-
-            await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:data.qualification,detailFillProgress:2}}).then((result)=>{
+            const updatedQualification = data.qualification.map((item) => {
+                return {
+                  highestQualification: item.highestQualification,
+                  instituteName: item.instituteName,
+                  startYear: new Date(item.startYear).toISOString().split('T')[0],
+                  endYear: new Date(item.endYear).toISOString().split('T')[0],
+                  stream: item.stream,
+                };
+              });
+            await Candidate.findByIdAndUpdate(req.user._id,{$set:{qualification:updatedQualification,detailFillProgress:2}}).then((result)=>{
                 res.status(200).send({
                     message:"Qualification Info Added successfully",
                     error:""
@@ -409,6 +417,7 @@ const resetPassword=async(req,res)=>{
     }
 }
 
+
 const addEducation=async(req,res)=>{
     try {
             
@@ -439,7 +448,7 @@ const deleteEducation = async (req, res) => {
     try {
         const qualificationId = req.body.qualificationId;
         const newEducation = req.user.qualification.filter(qualification => qualification._id.toString() !== qualificationId);
-
+        
         await Candidate.findByIdAndUpdate(req.user._id, { $set: { qualification: newEducation } })
             .then((result) => {
                 res.status(200).send({
@@ -455,6 +464,7 @@ const deleteEducation = async (req, res) => {
                 });
             });
     } catch (error) {
+        console.log(error);
         res.status(401).send({
             message: "Invalid Token",
             error: error
@@ -620,32 +630,34 @@ const editPersonalDetail=async(req,res)=>{
     }
 }
 
-const addPreference=async(req,res)=>{
+const addPreferenceDetail = async (req, res) => {
     try {
-        
-        const preference=req.body.preference;
-        await Candidate.findByIdAndUpdate(req.user._id,{$set:{preference:preference}}).then((result)=>{
-            res.status(200).send({
-                message:"Preference Info Updated successfully",
-                error:""
-            })
-        }).catch((err)=>{
-            console.log(err)
-            res.status(501).send({
-                message:"Internal Server Error",
-                error:err
-            })
-        })
+      const { areaOfInterest, workMode, lookingFor, salaryRange } = req.body.preference;
+      const candidate = req.user;
+  
+      candidate.preference.areaOfInterest = areaOfInterest;
+      candidate.preference.workMode = workMode;
+      candidate.preference.lookingFor = lookingFor;
 
-    
+      const [min, max] = salaryRange.split("-").map(value => parseInt(value.trim()));
+      candidate.preference.salaryRange = { min, max };
+  
+      await candidate.save();
+  
+      res.status(200).send({
+        message: "Preference Detail Added Successfully",
+        data: candidate,
+        error: ""
+      });
     } catch (error) {
-        res.status(500).send({
-            message:"Something Went Wrong!",
-            error:error
-        })
+      console.log(error);
+      res.status(400).send({
+        message: "Failed to add preference detail",
+        error: error.message
+      });
     }
-}
-
+  };
+  
 const saveJob=async(req,res)=>{
     try {
         const savedJobs= [...req.user.savedJob,req.body.jobId];
@@ -715,7 +727,7 @@ module.exports={
     deleteExperience,
     editExperience,
     editPersonalDetail,
-    addPreference,
+    addPreferenceDetail,
     saveJob,
     unSaveJob
 }

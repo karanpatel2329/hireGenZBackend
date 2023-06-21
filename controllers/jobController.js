@@ -16,39 +16,63 @@ const addJob = async(req,res)=>{
 
 const getAllJob = async(req,res)=>{
     try{
-        // console.log(req.user)
-       
+        //  const jobType=req.body.jobType;
         const pageNumber = parseInt(req.body.page) || 0;
         const pageSize = parseInt(req.body.limit) || 10;
-    
-        // Calculate the skip value for pagination
+        const jobRegex=[];
+
+        for(var i=0 ;i<req.user.preference.lookingFor.length;i++){
+                jobRegex.push(new RegExp(req.user.preference.lookingFor[i],"i"))
+        }
+        const areaRegex=[];
+
+        for(var i=0 ;i<req.user.preference.areaOfInterest.length;i++){
+                areaRegex.push(new RegExp(req.user.preference.areaOfInterest[i],"i"))
+            }
+            console.log(areaRegex);
+        const modeRegex=[];
+
+        for(var i=0 ;i<req.user.preference.workMode.length;i++){
+                modeRegex.push(new RegExp(req.user.preference.workMode[i],"i"))
+            }
+        
+
         const skip = pageNumber * pageSize;
-        const preferredJobSkills = req.user.skills;
-        const preferredFunctionalAreas = req.user.qualification.map(q => q.stream);
-        
-        const regexpreferredJobSkills = new RegExp(preferredJobSkills, 'i');
-        const regexpreferredFunctionalAreas = new RegExp(preferredFunctionalAreas, 'i');
+    
+        const jobs = await Job.find({       
+            $or: [
+                { jobType: {$in:jobRegex} },
+                { functionalArea: {$in:areaRegex} },
+                { mode: {$in:modeRegex} },
+                {
+                    salaryRange:{
+                        min:{$in:req.user.preference.salaryRange.min},
+                        max:{$in:req.user.preference.salaryRange.max}
+                    }
+                }
+                
+            ]
+        })
+          .skip(skip)
+          .limit(pageSize);
+         
+        const totalCount=await Job.countDocuments({       
+            $or: [
+                { jobType: {$in:jobRegex} },
+                { functionalArea: {$in:areaRegex} },
+                { mode: {$in:modeRegex} },
+                {
+                    salaryRange:{
+                        min:{$in:req.user.preference.salaryRange.min},
+                        max:{$in:req.user.preference.salaryRange.max}
+                    }
+                }
+                
+            ]
+        });   
 
-        const matchingJobs = await Job.find({
-          $or: [
-            { jobSkill: { $in: regexpreferredJobSkills } },
-            { functionalArea: { $in: regexpreferredFunctionalAreas } },
-          ]
-        }).skip(skip)
-        .limit(pageSize);;
-        // console.log(matchingJobs);
-        
-          const totalCount = await Job.countDocuments({   $or: [
-            { jobSkill: { $in: regexpreferredJobSkills } },
-            { functionalArea: { $in: regexpreferredFunctionalAreas } },
-          ] });
-
-        // const job =await Job.find({
-        //     jobSkill: { $in: user.skills },
-        //   });
-        // console.log(job);
         res.status(200).send({
-            data:{matchingJobs,totalCount},
+            data:{jobs,totalCount},
             message:"Page "+pageNumber+" number jobs get Successfully",
             error:""
         });      

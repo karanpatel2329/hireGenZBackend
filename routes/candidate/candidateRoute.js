@@ -27,7 +27,7 @@ router.patch("/passwordResetOtpVerify",candidateController.passwordResetOtpVerif
 router.patch("/resetPassword",candidateController.resetPassword);
 router.get("/getAllNotification",candidateMiddleware,notificationController.getAllCandidateNotification);
 router.patch("/editPersonalDetail",candidateMiddleware,candidateController.editPersonalDetail);
-router.patch("/addPreference",candidateMiddleware,candidateController.addPreference);
+router.patch("/addPreference",candidateMiddleware,candidateController.addPreferenceDetail);
 router.patch("/saveJob",candidateMiddleware,candidateController.saveJob);
 router.patch("/unSaveJob",candidateMiddleware,candidateController.unSaveJob);
 

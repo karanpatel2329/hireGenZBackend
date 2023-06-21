@@ -111,11 +111,17 @@ const CandidateSchema = new Schema({
             type:String
         }
     ],
-    jobType:[
-        {
-            type:String
-        }
-    ]
+   lookingFor:[{
+    type:String,
+   }],
+    salaryRange:{
+      min:{
+        type:Number,
+      },
+      max:{
+        type:Number,
+      }
+    }
 },
 savedJob:[
   {

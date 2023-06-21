@@ -46,6 +46,17 @@ const JobSchema = new Schema({
   companyId: {
     type: String,
   },
+  salaryRange:{
+    min:{
+      type:Number,
+    },
+    max:{
+      type:Number,
+    }
+  },
+  mode:[{
+    type:String,
+  }]
 });
 const Job = mongoose.model("Job", JobSchema);
 
