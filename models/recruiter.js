@@ -5,16 +5,20 @@ mongoose.set('strictQuery', true);
 const Schema = mongoose.Schema;
 
 const RecruiterSchema = new Schema({
-  firstName: {
-    type: String,
-  },
-  lastName: {
-    type: String,
+  fullName:{
+    type:String,
   },
   email: {
     type: String,
     required: true,
     unique: true,
+  },
+  mobileNo:{
+    type:Number,
+
+  },
+  gender:{
+    type:String
   },
   password: {
     type: String,
@@ -26,25 +30,44 @@ const RecruiterSchema = new Schema({
   designation: {
     type: String,
   },
-  companyImage: {
-    type: String,
+  company:{
+
+    companyImage: {
+      type: String,
+    },
+    companyFullName: {
+      type: String,
+    },
+    companyType: {
+      type: String,
+    }
+    ,
+    companyLocation: {
+      type: String,
+    },
+    companySize: {
+      type: String,
+    },
+    aboutCompany:{
+      type:String,
+    },
+    companyId:{
+      type:Schema.Types.ObjectId,
+      default: mongoose.Types.ObjectId
+    }
+   
   },
-  companyFullName: {
-    type: String,
-  },
-  companyShortName: {
-    type: String,
-  },
-  companyLocation: {
-    type: String,
-  },
-  companySize: {
-    type: String,
-  },
+  detailFillProgress:{
+    type:Number,
+    default:0,
+  }
+  
+  ,
   token:{
       type:String,
       
   },
+ 
   status:{
     type:String,
     enum:["pending","verified"],

@@ -24,7 +24,13 @@ const JobSchema = new Schema({
     type: String,
   },
   experience: {
-    type: Number,
+
+     min:{
+      type:Number,
+    },
+    max:{
+      type:Number,
+    }
   },
   functionalArea: {
     type: String,
@@ -43,6 +49,10 @@ const JobSchema = new Schema({
   companyName: {
     type: String,
   },
+  recruiterId:{
+    type:Schema.Types.ObjectId,
+  }
+  ,
   companyId: {
     type: String,
   },

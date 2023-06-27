@@ -4,6 +4,7 @@ const sendEmail=require("../services/sendEmail")
 const bcrypt=require("bcryptjs")
 const jwt=require("jsonwebtoken")
 const Recruiter=require("../models/recruiter");
+const Job=require("../models/job");
 const Candidate=require("../models/candidate");
 function isCompanyEmail(email) {
     const [username, emailDomain] = email.split('@');
@@ -153,46 +154,27 @@ function generateOTP() {
 
 const getRecruiterProfile=async(req,res)=>{
     try {
-        if(!req.header("Authorization")){
-            res.status(401).send({
-                message:"Please Provide Token to get Detail",
-                error:"Please Provide Token to get Detail"
-            })
-        }
-        else{
-        const token=req.header('Authorization').replace('Bearer ','')
-        
-        if(!token){
-            res.status(401).send({
-                message:"Please Provide Token to get Detail",
-                error:"Please Provide Token to get Detail"
-            })
-        }
-        const decode=jwt.verify(token,process.env.JWTRECRUITER)
-               
-        const user =await Recruiter.findOne({_id:decode._id})
-        //console.log(user)
-        if(!user){
+      //console.log(user)
+        if(!req.user){
             res.status(404).send({
                 message:"No User Found",
                 error:"No User Found"})
         }
         else{
-            const t=user.toObject();
+            const t=req.user.toObject();
             delete t.password;
             res.status(202).send({
                 data:t,
                 message:"Fetch User Successfully",
                 error:""
             })
-        }}
-        
+        }
     } catch (error) {
         console.log(error)
         res.status(401).send({
             message:"Invalid Token",
             error:error
-        })
+        })  
        
     }
 }
@@ -321,6 +303,146 @@ const resetPassword=async(req,res)=>{
         })
     }
 }
+
+const addRecruiterProfile=async(req,res)=>{
+    try {
+        if(req.body.fullName!=null && req.body.mobileNo!=null && req.body.gender!=null && req.body.designation!=null && req.body.profileImage!=null)
+        {
+                req.user.fullName=req.body.fullName;
+                req.user.mobileNo=req.body.mobileNo;
+                req.user.gender=req.body.gender;
+                req.user.designation=req.body.designation;
+                req.user.profileImage=req.body.profileImage;
+                req.user.detailFillProgress=1;
+                await req.user.save().then((result)=>{
+                    res.status(201).send({
+                        message:"Profile Added Successfully",
+                        error:""
+                    })
+                }).catch((err)=>{
+                    res.status(400).send({
+                    error:err.toString(),
+                    mesage:"Something Went Wrong",
+                    data:""})
+                })
+        }
+        else{
+            res.status(400).send({
+                error:"Incomplete Data",
+                mesage:"Some Data are Missing",
+                data:""
+            })
+        }
+    } catch (error) {
+        res.status(400).send({
+            error:error.toString(),
+            message:"Something Went Wrong",
+            data:""
+        })
+    }
+}
+const addRecruiterCompany=async(req,res)=>{
+    try {
+        if(req.body.companyFullName!=null && req.body.location!=null && req.body.type!=null && req.body.size!=null && req.body.about!=null && req.body.companyImage!=null)
+        {
+                const company={
+                    companyFullName:req.body.companyFullName,
+                    companyLocation:req.body.location,
+                    companyType:req.body.type,
+                    companySize:req.body.size,
+                    companyImage:req.body.companyImage,
+                    aboutCompany:req.body.about
+                }
+                // req.user.company.companyFullName=req.body.companyFullName;
+                // req.user.company.companyLocation=req.body.location;
+                // req.user.company.companyType=req.body.type;
+                // req.user.company.companySize=req.body.size;
+                // req.user.company.companyImage=req.body.companyImage;
+                // req.user.company.aboutCompany=req.body.about;
+
+                //req.user.detailFillProgress=2;
+                await Recruiter.findByIdAndUpdate(req.user.id,{$set:{company:company,detailFillProgress:2}}).then((result)=>{
+                    res.status(201).send({
+                        message:"Company Profile Added Successfully",
+                        error:""
+                    })
+                }).catch((err)=>{
+                    res.status(400).send({
+                    error:err.toString(),
+                    mesage:"Something Went Wrong",
+                    data:""})
+                })
+        }
+        else{
+            res.status(400).send({
+                error:"Incomplete Data",
+                mesage:"Some Data are Missing",
+                data:""
+            })
+        }
+    } catch (error) {
+        res.status(400).send({
+            error:error.toString(),
+            message:"Something Went Wrong",
+            data:""
+        })
+    }
+}
+
+const postJob=async(req,res)=>{
+    try {
+        if(req.body.title!=null &&req.body.type!=null&&req.body.degree!=null&&req.body.functionalArea!=null&&req.body.mode!=null&&req.body.jobSkill!=null &&req.body.salaryRange!=null &&req.body.experience!=null &&req.body.description!=null ){
+            const data={};
+            const salArr= req.body.salaryRange.split("-");
+            const expArr= req.body.experience.split("-");
+            data.title=req.body.title;
+            data.jobType=req.body.type;
+            data.experience={};
+            data.experience.min=parseInt(expArr[0]);
+            data.experience.max=parseInt(expArr[1]);
+            data.desc=req.body.description;
+            data.functionalArea=req.body.functionalArea;
+            data.jobSkill=req.body.jobSkill;
+            data.mode=req.body.mode;
+            data.salaryRange={};
+            data.salaryRange.min=parseInt(salArr[0]);
+            data.salaryRange.max=parseInt(salArr[1]);
+            data.companyId=req.user.company.companyId;
+            data.companyName=req.user.company.companyFullName;
+            data.applied=[];
+            data.degree=req.body.degree;
+            data.logo=req.user.company.companyImage;
+            data.recruiterId=req.user.id;
+          //  console.log(data);
+            const job= new Job(data);
+            await job.save().then((result)=>{
+                res.status(200).send({
+                    message:"Job Posted Successfully",
+                    error:"",
+                    data:result
+                })
+            }).catch((err)=>{
+                res.status(400).send({
+                error:err.toString(),
+                mesage:"Something Went Wrong",
+                data:""})
+            })
+        }
+        else{
+            res.status(400).send({
+                error:"Incomplete Data",
+                mesage:"Some Data are Missing",
+                data:""
+            })
+        }
+    } catch (error) {
+        res.status(400).send({
+            error:error.toString(),
+            message:"Something Went Wrong",
+            data:""
+        })
+    }
+}
 module.exports={
     recruiterRegister,
     recruiterVerify,
@@ -328,5 +450,8 @@ module.exports={
     getRecruiterProfile,
     passwordResetOtpVerify,
     sendRecruiterPasswordResetOtp,
-    resetPassword
+    resetPassword,
+    addRecruiterProfile,
+    addRecruiterCompany,
+    postJob
 }

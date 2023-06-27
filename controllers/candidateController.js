@@ -721,7 +721,7 @@ module.exports={
     passwordResetOtpVerify,
     resetPassword,
     addEducation,
-    deleteEducation,
+    deleteEducation,    
     editEducation,
     addExperience,
     deleteExperience,
