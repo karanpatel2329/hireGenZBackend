@@ -129,7 +129,15 @@ savedJob:[
       type:String,
     
   }
-]
+],
+appliedIn:[{
+  jobId:{
+    type:Schema.Types.ObjectId,
+  },
+  status:{
+    type:String
+  }
+}]
 
 
   });

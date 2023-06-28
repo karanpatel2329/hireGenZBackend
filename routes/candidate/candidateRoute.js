@@ -30,5 +30,6 @@ router.patch("/editPersonalDetail",candidateMiddleware,candidateController.editP
 router.patch("/addPreference",candidateMiddleware,candidateController.addPreferenceDetail);
 router.patch("/saveJob",candidateMiddleware,candidateController.saveJob);
 router.patch("/unSaveJob",candidateMiddleware,candidateController.unSaveJob);
+router.patch("/applyForJob",candidateMiddleware,candidateController.applyJobById);
 
 module.exports=router;

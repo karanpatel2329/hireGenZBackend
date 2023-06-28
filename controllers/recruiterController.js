@@ -443,6 +443,194 @@ const postJob=async(req,res)=>{
         })
     }
 }
+
+const editPostJob = async (req, res) => {
+    try {
+      // Extract the jobId from req.body
+      const { jobId, updatedData } = req.body;
+  
+      const data={};
+      if(updatedData.salaryRange!=null){
+        const salArr= updatedData.salaryRange.split("-");
+        data.salaryRange={};
+        data.salaryRange.min=parseInt(salArr[0]);
+        data.salaryRange.max=parseInt(salArr[1]);  
+      }
+      if(updatedData.experience!=null){
+        const expArr= updatedData.experience.split("-");
+        data.experience={};
+        data.experience.min=parseInt(expArr[0]);
+        data.experience.max=parseInt(expArr[1]);
+      }
+      if (updatedData.title != null) {
+        data.title = updatedData.title;
+      }
+      if (updatedData.jobType != null) {
+        data.jobType = updatedData.type;
+      }
+      if (updatedData.description != null) {
+        data.desc = updatedData.description;
+      }
+      if (updatedData.functionalArea != null) {
+        data.functionalArea = updatedData.functionalArea;
+      }
+      if (updatedData.jobSkill != null) {
+        data.jobSkill = updatedData.jobSkill;
+      }
+      if (updatedData.mode != null) {
+        data.mode = updatedData.mode;
+      }
+    //  data.companyId = req.user.company.companyId;
+      //data.companyName = req.user.company.companyFullName;
+      if (updatedData.degree != null) {
+        data.degree = updatedData.degree;
+      }
+      console.log(data);
+      console.log(jobId);
+   
+       await Job.findByIdAndUpdate(
+         jobId ,
+        { $set: data  }
+      ).then((result)=>{
+        res.status(200).send({
+            message: "Job Updated Successfully",
+            error: ""
+            
+          });
+      }).catch((err)=>{
+        res.status(404).send({
+            error: err.toString(),
+            message: "Job not found or unauthorized to edit",
+            data: ""
+          });
+      });
+        
+    } catch (error) {
+      res.status(400).send({
+        error: error.toString(),
+        message: "Something Went Wrong",
+        data: ""
+      });
+    }
+  };
+  
+const getAllCandidateApplication = async (req, res) => {
+try {
+    const job = await Job.find({ recruiterId: req.user._id });
+    if (job.length > 0) {
+    const applications = [];
+
+    await Promise.all(
+        job.map(async (app) => {
+        if (app.applied.length !== 0) {
+            const appPromises = app.applied.map(async (applied) => {
+            const candidate = await Candidate.findById(applied.userId);
+            const temp = { ...candidate._doc };
+            delete temp.password;
+            delete temp.otp;
+            delete temp.detailFillProgress;
+            delete temp.savedJob;
+            delete temp.status;
+            const t = {
+                candidate: temp,
+                job: app,
+            };
+            return t;
+            });
+
+            const appResults = await Promise.all(appPromises);
+            applications.push(...appResults);
+        }
+        })
+    );
+
+    // console.log(applications);
+
+    if (applications.length > 0) {
+        return res.status(200).send({
+        message: "Application Fetched Successfully",
+        error: "",
+        data: applications,
+        });
+    } else {
+        return res.status(200).send({
+        message: "No Candidate Apply For Job Yet",
+        error: "",
+        });
+    }
+    } else {
+    return res.status(200).send({
+        message: "No Job Found",
+        error: "",
+    });
+    }
+} catch (error) {
+    return res.status(401).send({
+    message: "Internal Server Error",
+    error: error.toString(),
+    });
+}
+};
+
+const shortListCandidate = async (req, res) => {
+    try {
+      const { candidateId, jobId } = req.body;
+      
+      // Update the candidate's status in the appliedIn array
+      await Candidate.updateOne(
+        { _id: candidateId, "appliedIn.jobId": jobId },
+        { $set: { "appliedIn.$.status": "shortlisted" } }
+      ).then((result)=>{
+        res.status(200).send({
+            message: "Candidate Shortlisted Successfully",
+            error: "",
+          });
+      }).catch((err)=>{
+        res.status(501).send({
+            message: "Something went Wrong Try Again Later",
+            error: err.toString(),
+          });
+      });
+      
+     
+    } catch (error) {
+      res.status(400).send({
+        message: "Internal Server Error",
+        error: error.toString(),
+      });
+    }
+  };
+  
+const declineCandidate = async (req, res) => {
+    try {
+      const { candidateId, jobId } = req.body;
+      
+      // Update the candidate's status in the appliedIn array
+      await Candidate.updateOne(
+        { _id: candidateId, "appliedIn.jobId": jobId },
+        { $set: { "appliedIn.$.status": "declined" } }
+      ).then((result)=>{
+        res.status(200).send({
+            message: "Candidate Decline Successfully",
+            error: "",
+          });
+      }).catch((err)=>{
+        res.status(501).send({
+            message: "Something went Wrong Try Again Later",
+            error: err.toString(),
+          });
+      });
+      
+     
+    } catch (error) {
+      res.status(400).send({
+        message: "Internal Server Error",
+        error: error.toString(),
+      });
+    }
+  };
+  
+  
 module.exports={
     recruiterRegister,
     recruiterVerify,
@@ -453,5 +641,9 @@ module.exports={
     resetPassword,
     addRecruiterProfile,
     addRecruiterCompany,
-    postJob
+    postJob,
+    editPostJob,
+    getAllCandidateApplication,
+    shortListCandidate,
+    declineCandidate
 }

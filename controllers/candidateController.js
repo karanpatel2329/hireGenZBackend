@@ -7,7 +7,9 @@ const Candidate=require("../models/candidate");
 
 const sendEmail=require("../services/sendEmail")
 const jwt=require("jsonwebtoken");
-const bcrypt=require("bcryptjs")
+const bcrypt=require("bcryptjs");
+const Job = require("../models/job");
+const { Schema, Mongoose, default: mongoose } = require("mongoose");
 const candidateRegister=async(req,res)=>{
    
     try {
@@ -61,8 +63,11 @@ const candidateVerify=async(req,res)=>{
                 await candidate.updateOne({$unset: { otp: 1 }})
                 candidate.save();
                 const token= await candidate.generateAuthToken();
+                const t=candidate;
+                delete t.password;
+
                 res.status(200).send({
-                    data:candidate,
+                    data:t,
                     message:"User Verified",
                     error:""
                 })
@@ -708,6 +713,50 @@ const unSaveJob=async(req,res)=>{
         })
     }
 }
+
+const applyJobById=async(req,res)=>{
+    try {
+        const {jobId}=req.body;
+
+        const existingJob = req.user.appliedIn.find(
+            (job) => job.jobId.toString() === jobId
+          );
+      
+          if (existingJob) {
+            return res.status(200).send({
+              message: "Job Already Applied",
+              error: "",
+            });
+          }
+          else{
+        req.user.appliedIn.push({status:"pending",jobId:new mongoose.Types.ObjectId(jobId)});
+        req.user.save();
+
+        await  Job.findByIdAndUpdate(jobId ,{
+            $push: {
+              applied: {
+                status: "pending",
+                userId:new  mongoose.Types.ObjectId(req.user._id),
+              },
+            },
+          }).then((result)=>{
+            res.status(200).send({
+                message:"Apply To Job Successfully",
+                error:""
+            })
+          }).catch((err)=>{
+            res.status(400).send({
+                message:"Something Went Wrong! Try Again Later",
+                error:err.toString(),
+            })
+          })}
+    } catch (error) {
+        res.status(501).send({
+            message:"Internal Server Error",
+            error:error.toString(),
+        })
+    }
+}
 module.exports={
     candidateRegister,
     candidateVerify,
@@ -729,5 +778,6 @@ module.exports={
     editPersonalDetail,
     addPreferenceDetail,
     saveJob,
-    unSaveJob
+    unSaveJob,
+    applyJobById
 }
