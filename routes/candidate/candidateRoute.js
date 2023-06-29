@@ -31,5 +31,8 @@ router.patch("/addPreference",candidateMiddleware,candidateController.addPrefere
 router.patch("/saveJob",candidateMiddleware,candidateController.saveJob);
 router.patch("/unSaveJob",candidateMiddleware,candidateController.unSaveJob);
 router.patch("/applyForJob",candidateMiddleware,candidateController.applyJobById);
+router.post("/getJobByCategory",candidateMiddleware,candidateController.getJobByCategory);
+router.post("/searchJobs",candidateMiddleware,candidateController.searchJob);
+router.post("/getJobByPreference",candidateMiddleware,candidateController.getJobByPreference);
 
 module.exports=router;

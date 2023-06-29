@@ -10,6 +10,9 @@ const JobSchema = new Schema({
         },
         userId:{
             type:Schema.Types.ObjectId,
+        },
+        appliedOn:{
+          type:String
         }
     }
   ],  
@@ -66,7 +69,13 @@ const JobSchema = new Schema({
   },
   mode:[{
     type:String,
-  }]
+  }],
+  createdOn:{
+    type:String
+  },
+  updatedOn:{
+    type:String
+  }
 });
 const Job = mongoose.model("Job", JobSchema);
 

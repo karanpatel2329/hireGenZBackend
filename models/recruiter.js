@@ -53,7 +53,7 @@ const RecruiterSchema = new Schema({
     },
     companyId:{
       type:Schema.Types.ObjectId,
-      default: mongoose.Types.ObjectId
+      default:new  mongoose.Types.ObjectId
     }
    
   },
@@ -75,6 +75,9 @@ const RecruiterSchema = new Schema({
   },
   otp:{
     type:Number,
+  },
+  createdOn:{
+    type:String,
   }  
 });
 RecruiterSchema.pre('save', async function(next){

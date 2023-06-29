@@ -136,8 +136,14 @@ appliedIn:[{
   },
   status:{
     type:String
+  },
+  appliedOn:{
+    type:String
   }
-}]
+}],
+createdOn:{
+  type:String
+}
 
 
   });

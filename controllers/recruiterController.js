@@ -39,6 +39,7 @@ const recruiterRegister=async(req,res)=>{
             const otp=generateOTP();
             var data=req.body;
             data.otp=otp;
+            data.createdOn=Date().toString();
         const recruiter=new Recruiter(data);
         recruiter.save();
       
@@ -388,6 +389,89 @@ const addRecruiterCompany=async(req,res)=>{
         })
     }
 }
+const editRecruiterProfile = async (req, res) => {
+    try {
+      if (
+        req.body.fullName != null &&
+        req.body.mobileNo != null &&
+        req.body.gender != null &&
+        req.body.designation != null &&
+        req.body.profileImage != null
+      ) {
+        req.user.fullName = req.body.fullName;
+        req.user.mobileNo = req.body.mobileNo;
+        req.user.gender = req.body.gender;
+        req.user.designation = req.body.designation;
+        req.user.profileImage = req.body.profileImage;
+        
+  
+        await req.user.save();
+  
+        res.status(200).send({
+          message: "Profile Edited Successfully",
+          error: "",
+        });
+      } else {
+        res.status(400).send({
+          error: "Incomplete Data",
+          message: "Some Data are Missing",
+          data: "",
+        });
+      }
+    } catch (error) {
+      res.status(500).send({
+        error: error.toString(),
+        message: "Something Went Wrong",
+        data: "",
+      });
+    }
+  };
+  
+  const editRecruiterCompany = async (req, res) => {
+    try {
+      if (
+        req.body.companyFullName != null &&
+        req.body.location != null &&
+        req.body.type != null &&
+        req.body.size != null &&
+        req.body.about != null &&
+        req.body.companyImage != null
+      ) {
+        const company = {
+          companyFullName: req.body.companyFullName,
+          companyLocation: req.body.location,
+          companyType: req.body.type,
+          companySize: req.body.size,
+          companyImage: req.body.companyImage,
+          aboutCompany: req.body.about,
+        };
+  
+        await Recruiter.findByIdAndUpdate(
+          req.user.id,
+          { company: company},
+          { new: true }
+        );
+  
+        res.status(200).send({
+          message: "Company Profile Edited Successfully",
+          error: "",
+        });
+      } else {
+        res.status(400).send({
+          error: "Incomplete Data",
+          message: "Some Data are Missing",
+          data: "",
+        });
+      }
+    } catch (error) {
+      res.status(500).send({
+        error: error.toString(),
+        message: "Something Went Wrong",
+        data: "",
+      });
+    }
+  };
+  
 
 const postJob=async(req,res)=>{
     try {
@@ -413,6 +497,8 @@ const postJob=async(req,res)=>{
             data.degree=req.body.degree;
             data.logo=req.user.company.companyImage;
             data.recruiterId=req.user.id;
+            data.createdOn=Date().toString();
+            data.updatedOn=Date().toString()
           //  console.log(data);
             const job= new Job(data);
             await job.save().then((result)=>{
@@ -485,9 +571,7 @@ const editPostJob = async (req, res) => {
       if (updatedData.degree != null) {
         data.degree = updatedData.degree;
       }
-      console.log(data);
-      console.log(jobId);
-   
+      data.updatedOn=Date().toString();
        await Job.findByIdAndUpdate(
          jobId ,
         { $set: data  }
@@ -629,7 +713,67 @@ const declineCandidate = async (req, res) => {
       });
     }
   };
+
+const getAllJobByRecruiterId=async(req,res)=>{
+    try {
+        var recruiterId=req.user._id;
+
+        const job=await Job.find({recruiterId:recruiterId});
+
+        if(job.length>0){
+            res.status(200).send({
+                message:"Job Fetched Successfully",
+                data:job
+            })
+        }else{
+            res.status(200).send({
+                mesage:"No Job Post Yet",
+                data:""
+            })
+        }
+    } catch (error) {
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:error.toString()
+        })
+    }
+}
   
+const getAllShortlisted=async(req,res)=>{
+    try {
+        var recruiterId=req.user._id;
+
+        await Job.find({ recruiterId: recruiterId }).then(async (jobs) => {
+            var shortlist = [];
+            //console.log(jobs);
+            await Promise.all(
+              jobs.map(async (job) => {
+                const candidates = await Candidate.find({ 'appliedIn.jobId': job._id,'appliedIn.status':"shortlisted" }, { password: 0, otp: 0, token: 0,appliedIn:0,savedJob:0,status:0 });
+                shortlist.push(...candidates);
+              })
+            );
+          
+          //  console.log(shortlist);
+            res.status(200).send({
+              message: "Candidates Fetched Successfully",
+              error: "",
+              data: shortlist
+            });
+          
+          
+        }).catch((err)=>{
+            res.status(400).send({
+                message:"Something Went Wrong",
+                error:err.toString()
+            })
+        });
+    } catch (error) {
+        res.status(501).send({
+            message:"Internal Server Error",
+            error:error.toString()
+        })
+    }
+}
   
 module.exports={
     recruiterRegister,
@@ -645,5 +789,9 @@ module.exports={
     editPostJob,
     getAllCandidateApplication,
     shortListCandidate,
-    declineCandidate
+    declineCandidate,
+    getAllJobByRecruiterId,
+    getAllShortlisted,
+    editRecruiterCompany,
+    editRecruiterProfile
 }

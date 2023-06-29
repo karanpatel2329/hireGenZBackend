@@ -26,6 +26,7 @@ const candidateRegister=async(req,res)=>{
         else{
         const otp=generateOTP();
         var data=req.body;
+        data.createdOn=Date().toString();
         data.otp=otp;
         const candidate=new Candidate(data);
         candidate.save();
@@ -729,13 +730,14 @@ const applyJobById=async(req,res)=>{
             });
           }
           else{
-        req.user.appliedIn.push({status:"pending",jobId:new mongoose.Types.ObjectId(jobId)});
+        req.user.appliedIn.push({status:"pending",appliedOn:Date().toString(),jobId:new mongoose.Types.ObjectId(jobId)});
         req.user.save();
 
         await  Job.findByIdAndUpdate(jobId ,{
             $push: {
               applied: {
                 status: "pending",
+                appliedOn:Date().toString(),
                 userId:new  mongoose.Types.ObjectId(req.user._id),
               },
             },
@@ -755,6 +757,147 @@ const applyJobById=async(req,res)=>{
             message:"Internal Server Error",
             error:error.toString(),
         })
+    }
+}
+
+const getJobByCategory=async(req,res)=>{
+    try {
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
+        const regex=new RegExp(req.body.category,"i")
+        const skip = pageNumber * pageSize;
+    
+        const jobs = await Job.find({ jobType: regex })
+          .skip(skip)
+          .limit(pageSize);
+         
+        const totalCount=await Job.countDocuments({ jobType: regex });   
+
+        res.status(200).send({
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            data:{jobs,totalCount},
+            error:""
+        })
+    } catch (error) {
+        res.status(500).send({
+            message:"Something Went Wrong",
+            error:error
+        })
+    }
+}
+const searchJob=async(req,res)=>{
+    try{
+        // console.log(req.user)
+       
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
+    
+        // Calculate the skip value for pagination
+        const skip = pageNumber * pageSize;
+
+        const searchText=req.body.searchText
+        const regex = new RegExp(searchText, 'i');
+        // console.log(regex)
+        const matchingJobs = await Job.find({
+          $or: [
+            { title: { $in: regex } },
+            { companyName: { $in: regex } },
+          ]
+        }).skip(skip)
+        .limit(pageSize);;
+        // console.log(matchingJobs);
+        
+          const totalCount = await Job.countDocuments({   $or: [
+            { title: { $in: regex } },
+            { companyName: { $in: regex } },
+          ] });
+
+        // const job =await Job.find({
+        //     jobSkill: { $in: user.skills },
+        //   });
+        // console.log(job);
+        res.status(200).send({
+            data:{matchingJobs,totalCount},
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            error:""
+        });      
+    }catch(e){
+        console.log(e);
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:e
+        });
+    }
+}
+
+const getJobByPreference = async(req,res)=>{
+    try{
+        //  const jobType=req.body.jobType;
+        const pageNumber = parseInt(req.body.page) || 0;
+        const pageSize = parseInt(req.body.limit) || 10;
+        const jobRegex=[];
+
+        for(var i=0 ;i<req.user.preference.lookingFor.length;i++){
+                jobRegex.push(new RegExp(req.user.preference.lookingFor[i],"i"))
+        }
+        const areaRegex=[];
+
+        for(var i=0 ;i<req.user.preference.areaOfInterest.length;i++){
+                areaRegex.push(new RegExp(req.user.preference.areaOfInterest[i],"i"))
+            }
+            console.log(areaRegex);
+        const modeRegex=[];
+
+        for(var i=0 ;i<req.user.preference.workMode.length;i++){
+                modeRegex.push(new RegExp(req.user.preference.workMode[i],"i"))
+            }
+        
+
+        const skip = pageNumber * pageSize;
+    
+        const jobs = await Job.find({       
+            $or: [
+                { jobType: {$in:jobRegex} },
+                { functionalArea: {$in:areaRegex} },
+                { mode: {$in:modeRegex} },
+                {
+                    salaryRange:{
+                        min:{$in:req.user.preference.salaryRange.min},
+                        max:{$in:req.user.preference.salaryRange.max}
+                    }
+                }
+                
+            ]
+        })
+          .skip(skip)
+          .limit(pageSize);
+         
+        const totalCount=await Job.countDocuments({       
+            $or: [
+                { jobType: {$in:jobRegex} },
+                { functionalArea: {$in:areaRegex} },
+                { mode: {$in:modeRegex} },
+                {
+                    salaryRange:{
+                        min:{$in:req.user.preference.salaryRange.min},
+                        max:{$in:req.user.preference.salaryRange.max}
+                    }
+                }
+                
+            ]
+        });   
+
+        res.status(200).send({
+            data:{jobs,totalCount},
+            message:"Page "+pageNumber+" number jobs get Successfully",
+            error:""
+        });      
+    }catch(e){
+        console.log(e);
+        res.status(500).send({
+            message:"Internal Server Error",
+            error:e
+        });
     }
 }
 module.exports={
@@ -779,5 +922,8 @@ module.exports={
     addPreferenceDetail,
     saveJob,
     unSaveJob,
-    applyJobById
+    applyJobById,
+    getJobByCategory,
+    searchJob,
+    getJobByPreference
 }
